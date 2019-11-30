@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29326.143
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "rFtpSrvCore", "rFtpSrvCore\rFtpSrvCore.csproj", "{7D8D598E-749F-4B60-A1D2-E5A06A2922CE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "rFtpSrvFileSystem", "rFtpSrvFileSystem\rFtpSrvFileSystem.csproj", "{62ACCBCD-32D9-4676-A812-BBF7885C6EA0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7D8D598E-749F-4B60-A1D2-E5A06A2922CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D8D598E-749F-4B60-A1D2-E5A06A2922CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D8D598E-749F-4B60-A1D2-E5A06A2922CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D8D598E-749F-4B60-A1D2-E5A06A2922CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62ACCBCD-32D9-4676-A812-BBF7885C6EA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62ACCBCD-32D9-4676-A812-BBF7885C6EA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62ACCBCD-32D9-4676-A812-BBF7885C6EA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62ACCBCD-32D9-4676-A812-BBF7885C6EA0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4151CE9E-D2E8-4ABE-B72C-405CEF28A08C}
+	EndGlobalSection
+EndGlobal

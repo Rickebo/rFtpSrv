@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="..\FtpServer\src\FubarDev.FtpServer.Shared\FubarDev.FtpServer.Shared.projitems" Label="Shared" />
+
+  <ItemGroup>
+    <PackageReference Include="FubarDev.FtpServer" Version="3.1.1" />
+    <PackageReference Include="FubarDev.FtpServer.Abstractions" Version="3.1.1" />
+    <PackageReference Include="FubarDev.FtpServer.Commands" Version="3.1.1" />
+  </ItemGroup>
+
+</Project>
