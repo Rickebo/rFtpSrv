@@ -116,18 +116,28 @@ namespace rFtpSrvFileSystem
             var searchDirInfo = ((DirectoryEntry)directoryEntry).Info;
             var fullPath = Path.Combine(searchDirInfo.FullName, name);
             IUnixFileSystemEntry? result;
+            FileSystemInfo? info;
+
             if (File.Exists(fullPath))
             {
-                result = new FileEntry(new FileInfo(fullPath));
+                var fileInfo = new FileInfo(fullPath);
+                info = fileInfo;
+                result = new FileEntry(fileInfo);
             }
             else if (Directory.Exists(fullPath))
             {
-                result = new DirectoryEntry(new DirectoryInfo(fullPath), false, SupportsNonEmptyDirectoryDelete);
+                var dirInfo = new DirectoryInfo(fullPath);
+                info = dirInfo;
+                result = new DirectoryEntry(dirInfo, false, SupportsNonEmptyDirectoryDelete);
             }
             else
             {
                 result = null;
+                info = null;
             }
+
+            if (info != null && _blocks.IsBlocked(info, BlockOperation.Access))
+                return Task.FromException<IUnixFileSystemEntry?>(new AccessViolationException("Access denied."));
 
             return Task.FromResult(result);
         }
@@ -140,11 +150,18 @@ namespace rFtpSrvFileSystem
 
             if (source is FileEntry sourceFileEntry)
             {
+                if (_blocks.IsBlocked(sourceFileEntry.FileInfo, BlockOperation.Move))
+                    return Task.FromException<IUnixFileSystemEntry>(new AccessViolationException("Access denied."));
+
                 sourceFileEntry.FileInfo.MoveTo(targetName);
                 return Task.FromResult<IUnixFileSystemEntry>(new FileEntry(new FileInfo(targetName)));
             }
 
             var sourceDirEntry = (DirectoryEntry)source;
+
+            if (_blocks.IsBlocked(sourceDirEntry.DirectoryInfo, BlockOperation.Move))
+                return Task.FromException<IUnixFileSystemEntry>(new AccessViolationException("Access denied."));
+
             sourceDirEntry.DirectoryInfo.MoveTo(targetName);
             return Task.FromResult<IUnixFileSystemEntry>(new DirectoryEntry(new DirectoryInfo(targetName), false, SupportsNonEmptyDirectoryDelete));
         }
@@ -154,11 +171,18 @@ namespace rFtpSrvFileSystem
         {
             if (entry is DirectoryEntry dirEntry)
             {
+                if (_blocks.IsBlocked(dirEntry.DirectoryInfo, BlockOperation.Unlink))
+                    return Task.FromException(new AccessViolationException("Access denied."));
+
                 dirEntry.DirectoryInfo.Delete(SupportsNonEmptyDirectoryDelete);
             }
             else
             {
                 var fileEntry = (FileEntry)entry;
+
+                if (_blocks.IsBlocked(fileEntry.FileInfo, BlockOperation.Unlink))
+                    return Task.FromException(new AccessViolationException("Access denied."));
+
                 fileEntry.Info.Delete();
             }
 
@@ -169,6 +193,10 @@ namespace rFtpSrvFileSystem
         public Task<IUnixDirectoryEntry> CreateDirectoryAsync(IUnixDirectoryEntry targetDirectory, string directoryName, CancellationToken cancellationToken)
         {
             var targetEntry = (DirectoryEntry)targetDirectory;
+
+            if (_blocks.IsBlocked(targetEntry.DirectoryInfo, BlockOperation.Create))
+                return Task.FromException<IUnixDirectoryEntry>(new AccessViolationException("Access denied."));
+
             var newDirInfo = targetEntry.DirectoryInfo.CreateSubdirectory(directoryName);
             return Task.FromResult<IUnixDirectoryEntry>(new DirectoryEntry(newDirInfo, false, SupportsNonEmptyDirectoryDelete));
         }
@@ -177,6 +205,10 @@ namespace rFtpSrvFileSystem
         public Task<Stream> OpenReadAsync(IUnixFileEntry fileEntry, long startPosition, CancellationToken cancellationToken)
         {
             var fileInfo = ((FileEntry)fileEntry).FileInfo;
+
+            if (_blocks.IsBlocked(fileInfo, BlockOperation.Read))
+                return Task.FromException<Stream>(new AccessViolationException("Access denied."));
+
             var input = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             if (startPosition != 0)
             {
@@ -190,6 +222,10 @@ namespace rFtpSrvFileSystem
         public async Task<IBackgroundTransfer?> AppendAsync(IUnixFileEntry fileEntry, long? startPosition, Stream data, CancellationToken cancellationToken)
         {
             var fileInfo = ((FileEntry)fileEntry).FileInfo;
+
+            if (_blocks.IsBlocked(fileInfo, BlockOperation.Write))
+                return await Task.FromException<IBackgroundTransfer?>(new AccessViolationException("Access denied."));
+
             using (var output = fileInfo.OpenWrite())
             {
                 if (startPosition == null)
@@ -209,6 +245,10 @@ namespace rFtpSrvFileSystem
         {
             var targetEntry = (DirectoryEntry)targetDirectory;
             var fileInfo = new FileInfo(Path.Combine(targetEntry.Info.FullName, fileName));
+
+            if (_blocks.IsBlocked(fileInfo, BlockOperation.Create | BlockOperation.Write))
+                return await Task.FromException<IBackgroundTransfer?>(new AccessViolationException("Access denied."));
+
             using (var output = fileInfo.Create())
             {
                 await data.CopyToAsync(output, _streamBufferSize, _flushStream, cancellationToken).ConfigureAwait(false);
@@ -221,6 +261,10 @@ namespace rFtpSrvFileSystem
         public async Task<IBackgroundTransfer?> ReplaceAsync(IUnixFileEntry fileEntry, Stream data, CancellationToken cancellationToken)
         {
             var fileInfo = ((FileEntry)fileEntry).FileInfo;
+
+            if (_blocks.IsBlocked(fileInfo, BlockOperation.Write))
+                return await Task.FromException<IBackgroundTransfer?>(new AccessViolationException("Access denied."));
+
             using (var output = fileInfo.OpenWrite())
             {
                 await data.CopyToAsync(output, _streamBufferSize, _flushStream, cancellationToken).ConfigureAwait(false);
@@ -242,6 +286,9 @@ namespace rFtpSrvFileSystem
         public Task<IUnixFileSystemEntry> SetMacTimeAsync(IUnixFileSystemEntry entry, DateTimeOffset? modify, DateTimeOffset? access, DateTimeOffset? create, CancellationToken cancellationToken)
         {
             var item = ((FileSystemEntry)entry).Info;
+
+            if (_blocks.IsBlocked(item, BlockOperation.SetTime))
+                return Task.FromException<IUnixFileSystemEntry>(new AccessViolationException("Access denied."));
 
             if (access != null)
             {

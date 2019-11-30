@@ -22,12 +22,11 @@ namespace rFtpSrvFileSystem
         public override bool Equals(object obj)
         {
             if (obj is FileSystemInfoWrapper other)
-                return Equals(this, other);
+                return RootedPath == other.RootedPath;
 
             return false;
         }
 
-        public bool Equals(FileSystemInfoWrapper other) => RootedPath == other.RootedPath;
         public override int GetHashCode() => RootedPath.GetHashCode();
     }
 }

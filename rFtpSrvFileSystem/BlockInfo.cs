@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Text;
 
 namespace rFtpSrvFileSystem
@@ -18,6 +19,7 @@ namespace rFtpSrvFileSystem
             _operation &= ~operation;
         }
 
+        [Pure]
         public bool IsBlocked(BlockOperation operation)
         {
             return (_operation & operation) != 0;
@@ -44,14 +46,25 @@ namespace rFtpSrvFileSystem
     }
 
     [Flags]
-    public enum BlockOperation : byte
+    public enum BlockOperation : ushort
     {
         List = 1,
 
-        Access = 16,
-        Read = 17,
-        Write = 18,
+        Create = 2,
+        Delete = 2 << 1,
 
-        All = byte.MaxValue
+        Read = 2 << 2,
+        Write = 2 << 3,
+
+        Move = 2 | 2 << 1 | 2 << 2 | 2 << 3,
+        Copy = 2 | 2 << 2 | 2 << 3,
+
+        Access = 2 << 4,
+        Unlink = 2 << 5,
+        Link = 2 << 6,
+
+        SetTime = 2 << 7,
+
+        All = ushort.MaxValue
     }
 }
